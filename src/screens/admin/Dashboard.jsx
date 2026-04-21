@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Package, ShoppingBag, Users, TrendingUp } from 'lucide-react'
+import { Package, ShoppingBag, Users, TrendingUp, Grid3x3, ClipboardList, UserCircle } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import AdminNavbar from '../../components/AdminNavbar'
 import { weeklySales, products, orders } from '../../data/data'
@@ -31,24 +31,27 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* KPI cards */}
-      <div className="max-w-7xl mx-auto px-4 -mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {[
-          { icon: Package,     label: 'Total de Productos', value: products.length, delta: '+15 hoy', color: 'text-bark-600' },
-          { icon: ShoppingBag, label: 'Pedidos de Hoy',     value: 23,              delta: '+8 más que ayer', color: 'text-green-600' },
-          { icon: Users,       label: 'Nuevos Usuarios',    value: 12,              delta: '+4 hoy', color: 'text-bark-600' },
-        ].map(({ icon: Icon, label, value, delta, color }) => (
-          <div key={label} className="card flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-paw-100 flex items-center justify-center text-paw-600">
-              <Icon size={18} />
+      {/* KPI cards - Separados del banner de arriba con más espacio */}
+      {/* Cambié el -mt-4 por mt-8 para que haya más separación */}
+      <div className="max-w-7xl mx-auto px-4 mt-8 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[
+            { icon: Package, label: 'Total de Productos', value: products.length, delta: '+15 hoy', color: 'text-bark-600' },
+            { icon: ShoppingBag, label: 'Pedidos de Hoy', value: 23, delta: '+8 más que ayer', color: 'text-green-600' },
+            { icon: Users, label: 'Nuevos Usuarios', value: 12, delta: '+4 hoy', color: 'text-bark-600' },
+          ].map(({ icon: Icon, label, value, delta, color }) => (
+            <div key={label} className="card flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-paw-100 flex items-center justify-center text-paw-600">
+                <Icon size={18} />
+              </div>
+              <div>
+                <p className="text-xs text-bark-400">{label}</p>
+                <p className={`text-2xl font-bold ${color}`}>{value}</p>
+                <p className="text-xs text-green-500">{delta}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-bark-400">{label}</p>
-              <p className={`text-2xl font-bold ${color}`}>{value}</p>
-              <p className="text-xs text-green-500">{delta}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Chart + Best sellers + Revenue */}
@@ -114,12 +117,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick links */}
+      {/* Gestión cards con nuevos iconos */}
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Gestión de Productos', to: '/admin/productos', icon: Package },
-          { label: 'Gestión de Pedidos',   to: '/admin/pedidos',   icon: ShoppingBag },
-          { label: 'Gestión de Usuarios',  to: '/admin/usuarios',  icon: Users },
+          { label: 'Gestión de Productos', to: '/admin/productos', icon: Grid3x3 },
+          { label: 'Gestión de Pedidos',   to: '/admin/pedidos',   icon: ClipboardList },
+          { label: 'Gestión de Usuarios',  to: '/admin/usuarios',  icon: UserCircle },
         ].map(({ label, to, icon: Icon }) => (
           <Link key={to} to={to} className="card flex items-center gap-3 hover:shadow-md transition-shadow group">
             <div className="w-9 h-9 rounded-xl bg-paw-100 flex items-center justify-center text-paw-600 group-hover:bg-paw-200 transition-colors">

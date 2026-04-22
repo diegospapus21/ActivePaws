@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom'
-import { Package, ShoppingBag, Users, TrendingUp, Grid3x3, ClipboardList, UserCircle } from 'lucide-react'
+import { Package, ShoppingBag, Users, TrendingUp } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import AdminNavbar from '../../components/AdminNavbar'
 import { weeklySales, products, orders } from '../../data/data'
+
+// Rutas corregidas - desde src/screens/admin/ hasta src/assets/
+// Dashboard.jsx está en: src/screens/admin/Dashboard.jsx
+// Las imágenes están en: src/assets/
+// Por lo tanto: ../../assets/ (subir 2 niveles)
+import gestionProductosImg from '../../assets/gestiondeproductos.png'
+import gestionPedidosImg from '../../assets/gestiondepedidos.png'
+import gestionUsuariosImg from '../../assets/festiondeusuarios.png'
 
 const BEST = [
   { name: 'Suéter Azul',     sales: 450, img: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=60&h=60&fit=crop' },
@@ -31,8 +39,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* KPI cards - Separados del banner de arriba con más espacio */}
-      {/* Cambié el -mt-4 por mt-8 para que haya más separación */}
+      {/* KPI cards */}
       <div className="max-w-7xl mx-auto px-4 mt-8 mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
@@ -117,20 +124,43 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Gestión cards con nuevos iconos */}
+      {/* Gestión cards con IMÁGENES PERSONALIZADAS */}
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {[
-          { label: 'Gestión de Productos', to: '/admin/productos', icon: Grid3x3 },
-          { label: 'Gestión de Pedidos',   to: '/admin/pedidos',   icon: ClipboardList },
-          { label: 'Gestión de Usuarios',  to: '/admin/usuarios',  icon: UserCircle },
-        ].map(({ label, to, icon: Icon }) => (
-          <Link key={to} to={to} className="card flex items-center gap-3 hover:shadow-md transition-shadow group">
-            <div className="w-9 h-9 rounded-xl bg-paw-100 flex items-center justify-center text-paw-600 group-hover:bg-paw-200 transition-colors">
-              <Icon size={16} />
-            </div>
-            <span className="font-semibold text-bark-700 group-hover:text-paw-700 transition-colors">{label}</span>
-          </Link>
-        ))}
+        {/* Gestión de Productos */}
+        <Link to="/admin/productos" className="card flex items-center gap-3 hover:shadow-md transition-shadow group">
+          <div className="w-9 h-9 rounded-xl bg-paw-100 flex items-center justify-center overflow-hidden group-hover:bg-paw-200 transition-colors">
+            <img 
+              src={gestionProductosImg} 
+              alt="Gestión de Productos" 
+              className="w-6 h-6 object-contain"
+            />
+          </div>
+          <span className="font-semibold text-bark-700 group-hover:text-paw-700 transition-colors">Gestión de Productos</span>
+        </Link>
+
+        {/* Gestión de Pedidos */}
+        <Link to="/admin/pedidos" className="card flex items-center gap-3 hover:shadow-md transition-shadow group">
+          <div className="w-9 h-9 rounded-xl bg-paw-100 flex items-center justify-center overflow-hidden group-hover:bg-paw-200 transition-colors">
+            <img 
+              src={gestionPedidosImg} 
+              alt="Gestión de Pedidos" 
+              className="w-6 h-6 object-contain"
+            />
+          </div>
+          <span className="font-semibold text-bark-700 group-hover:text-paw-700 transition-colors">Gestión de Pedidos</span>
+        </Link>
+
+        {/* Gestión de Usuarios */}
+        <Link to="/admin/usuarios" className="card flex items-center gap-3 hover:shadow-md transition-shadow group">
+          <div className="w-9 h-9 rounded-xl bg-paw-100 flex items-center justify-center overflow-hidden group-hover:bg-paw-200 transition-colors">
+            <img 
+              src={gestionUsuariosImg} 
+              alt="Gestión de Usuarios" 
+              className="w-6 h-6 object-contain"
+            />
+          </div>
+          <span className="font-semibold text-bark-700 group-hover:text-paw-700 transition-colors">Gestión de Usuarios</span>
+        </Link>
       </div>
     </div>
   )

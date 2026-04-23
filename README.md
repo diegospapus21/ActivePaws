@@ -1,32 +1,28 @@
-# 🐾 ActivePaws – Tienda en Línea
+ActivePaws – Tienda en Línea
 
-Proyecto formativo del módulo 3.8 – Instituto Técnico Ricaldone  
-**Docente:** Ing. Daniel Wilfredo Granados Hernández  
-**Nivel:** 3° año Bachillerato en Desarrollo de Software
+Proyecto formativo del modulo 3.8 – Instituto Técnico Ricaldone  
+Docente: Ing. Daniel Wilfredo Granados Hernández  
+3° año Bachillerato en Desarrollo de Software
 
 ---
 
-## 👥 Integrantes del equipo
+Integrantes del equipo
 
-| Nombre | Carné |
+| Nombre | Carnet |
 |--------|-------|
 | (Nombre 1) | — |
 | (Nombre 2) | — |
 | (Nombre 3) | — |
 | (Nombre 4) | — |
 
----
+ Descripción
 
-## 📋 Descripción
+Tienda en línea para mascotas ActivePaws que ofrece ropa y accesorios para perros y gatos.  
+Esta primera entrega implementa las interfaces en React JS + Vite + Tailwind CSS con navegación funcional y datos quemados (sin conexión a API).
 
-Tienda en línea para mascotas **ActivePaws** que ofrece ropa y accesorios para perros y gatos.  
-Esta primera entrega implementa las interfaces en **React JS + Vite + Tailwind CSS** con navegación funcional y datos quemados (sin conexión a API).
 
----
+Estructura de carpetas
 
-## 🗂️ Estructura de carpetas
-
-```
 src/
 ├── components/          # Componentes reutilizables
 │   ├── Navbar.jsx
@@ -53,13 +49,10 @@ src/
 ├── App.jsx              # Rutas principales (React Router)
 ├── main.jsx
 └── index.css
-```
 
----
+ Instalación y ejecución
 
-## 🚀 Instalación y ejecución
-
-```bash
+bash
 # 1. Instalar dependencias
 npm install
 
@@ -68,11 +61,8 @@ npm run dev
 
 # 3. Build de producción
 npm run build
-```
 
----
-
-## 📦 Dependencias principales
+ Dependencias principales
 
 | Paquete | Versión | Uso |
 |---------|---------|-----|
@@ -84,20 +74,7 @@ npm run build
 | tailwindcss | ^3.4.1 | Estilos utilitarios |
 | vite | ^5.1.0 | Herramienta de construcción |
 
----
-
-## 🎨 Paleta de colores
-
-| Variable | Color | Uso |
-|----------|-------|-----|
-| `paw-500` | `#c9891a` | Botones principales, acentos |
-| `bark-700` | `#5c3d2e` | Texto principal |
-| `cream-100` | `#f5efe6` | Fondos suaves |
-| `cream-200` | `#ede0d0` | Bordes, fondos secundarios |
-
----
-
-## 🖥️ Pantallas implementadas
+ Pantallas implementadas
 
 ### Públicas
 - `/` — Inicio / Home
@@ -119,15 +96,15 @@ npm run build
 
 ---
 
-## 🔑 Acceso rápido (datos de prueba)
+## Acceso rápido (datos de prueba)
 
 Para ingresar al panel admin, en la pantalla de login escribir **`admin`** como usuario.
 
 ---
 
-## 📱 Diseño Responsivo
+## Diseño Responsivo
 
 La aplicación es completamente responsiva:
-- **Móvil** (< 768px): navegación inferior, layouts en columna
-- **Tablet** (768px – 1024px): grids adaptados
-- **Escritorio** (> 1024px): layout completo con navbar horizontal
+- Móvil(< 768px): navegación inferior, layouts en columna
+- Tablet (768px – 1024px): grids adaptados
+- Escritorio (> 1024px): layout completo con navbar horizontal

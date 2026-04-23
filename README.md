@@ -10,7 +10,7 @@ Integrantes del equipo
 
 | Nombre | Carnet |
 |--------|-------|
-| (Nombre 1) | — |
+| Diego Gabriel Hernandez Colorado | 20230048 |
 | (Nombre 2) | — |
 | (Nombre 3) | — |
 | (Nombre 4) | — |

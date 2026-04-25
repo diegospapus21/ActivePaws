@@ -11,44 +11,14 @@ Integrantes del equipo
 | Nombre | Carnet |
 |--------|-------|
 | Diego Gabriel Hernandez Colorado | 20230048 |
-| (Nombre 2) | — |
-| (Nombre 3) | — |
-| (Nombre 4) | — |
+| Alvaro Alexander Vasquez Cortez | 20240408 |
+Los demas no trabajaron.
 
  Descripción
 
 Tienda en línea para mascotas ActivePaws que ofrece ropa y accesorios para perros y gatos.  
 Esta primera entrega implementa las interfaces en React JS + Vite + Tailwind CSS con navegación funcional y datos quemados (sin conexión a API).
 
-
-Estructura de carpetas
-
-src/
-├── components/          # Componentes reutilizables
-│   ├── Navbar.jsx
-│   ├── AdminNavbar.jsx
-│   ├── ProductCard.jsx
-│   ├── StatusBadge.jsx
-│   └── MobileNav.jsx
-├── screens/             # Pantallas de la aplicación
-│   ├── Home.jsx
-│   ├── Login.jsx
-│   ├── Register.jsx
-│   ├── ProductList.jsx
-│   ├── ProductDetail.jsx
-│   ├── Cart.jsx
-│   ├── Payment.jsx
-│   ├── Reviews.jsx
-│   └── admin/
-│       ├── Dashboard.jsx
-│       ├── ProductManagement.jsx
-│       ├── OrderManagement.jsx
-│       └── UserManagement.jsx
-├── data/
-│   └── data.js          # Datos quemados (productos, pedidos, usuarios)
-├── App.jsx              # Rutas principales (React Router)
-├── main.jsx
-└── index.css
 
  Instalación y ejecución
 
@@ -58,9 +28,6 @@ npm install
 
 # 2. Iniciar servidor de desarrollo
 npm run dev
-
-# 3. Build de producción
-npm run build
 
  Dependencias principales
 
@@ -76,7 +43,7 @@ npm run build
 
  Pantallas implementadas
 
-### Públicas
+Públicas
 - `/` — Inicio / Home
 - `/login` — Inicio de Sesión
 - `/registro` — Registro de cuenta
@@ -88,7 +55,7 @@ npm run build
 - `/pago` — Método de pago
 - `/resenas` — Reseñas de productos (vista móvil)
 
-### Administración
+Administración
 - `/admin` — Dashboard con métricas y gráfica
 - `/admin/productos` — Gestión de productos
 - `/admin/pedidos` — Gestión de pedidos
@@ -96,13 +63,12 @@ npm run build
 
 ---
 
-## Acceso rápido (datos de prueba)
+Acceso rápido (datos de prueba)
 
 Para ingresar al panel admin, en la pantalla de login escribir **`admin`** como usuario.
 
 ---
-
-## Diseño Responsivo
+Diseño Responsivo
 
 La aplicación es completamente responsiva:
 - Móvil(< 768px): navegación inferior, layouts en columna

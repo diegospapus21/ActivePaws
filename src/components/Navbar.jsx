@@ -1,12 +1,34 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { ShoppingCart, Search, Menu, X, User } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import logo from '../assets/LogoDeActivePaws2.png'
 
 export default function Navbar({ isAdmin = false }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
   const location = useLocation()
-  const navigate = useNavigate()
+
+  useEffect(() => {
+    const updateCartCount = () => {
+      const savedCart = localStorage.getItem('cart')
+      if (savedCart) {
+        const cart = JSON.parse(savedCart)
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
+        setCartCount(totalItems)
+      } else {
+        setCartCount(0)
+      }
+    }
+
+    updateCartCount()
+    window.addEventListener('storage', updateCartCount)
+    window.addEventListener('cartUpdated', updateCartCount)
+    
+    return () => {
+      window.removeEventListener('storage', updateCartCount)
+      window.removeEventListener('cartUpdated', updateCartCount)
+    }
+  }, [])
 
   const navLinks = [
     { label: 'Inicio', to: '/' },
@@ -20,7 +42,6 @@ export default function Navbar({ isAdmin = false }) {
   return (
     <header className="bg-[#EFE4D2] border-b border-amber-200 sticky top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-20">
-        {/* Logo con tu imagen más grande y texto */}
         <Link to="/" className="flex items-center gap-3 shrink-0 group">
           <img 
             src={logo}
@@ -35,7 +56,6 @@ export default function Navbar({ isAdmin = false }) {
           </div>
         </Link>
 
-        {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
           {navLinks.map(link => (
             <Link
@@ -52,17 +72,19 @@ export default function Navbar({ isAdmin = false }) {
           ))}
         </nav>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
           <button className="p-2 text-amber-700 hover:text-amber-600 hover:bg-amber-100/50 rounded-lg transition-all duration-200">
             <Search size={18} />
           </button>
           <Link to="/carrito" className="p-2 text-amber-700 hover:text-amber-600 hover:bg-amber-100/50 rounded-lg transition-all duration-200 relative">
             <ShoppingCart size={18} />
-            <span className="absolute -top-1 -right-1 bg-amber-600 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-amber-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            )}
           </Link>
           
-          {/* Foto de perfil del admin */}
           {isAdmin ? (
             <Link to="/admin" className="flex items-center gap-2 ml-2">
               <img
@@ -78,7 +100,6 @@ export default function Navbar({ isAdmin = false }) {
             </Link>
           )}
           
-          {/* Mobile menu toggle */}
           <button
             className="md:hidden p-2 text-amber-700 hover:text-amber-600 hover:bg-amber-100/50 rounded-lg transition-all duration-200"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -88,7 +109,6 @@ export default function Navbar({ isAdmin = false }) {
         </div>
       </div>
 
-      {/* Mobile dropdown */}
       {mobileOpen && (
         <div className="md:hidden bg-[#EFE4D2] border-t border-amber-200 px-4 py-4 flex flex-col gap-3">
           {navLinks.map(link => (

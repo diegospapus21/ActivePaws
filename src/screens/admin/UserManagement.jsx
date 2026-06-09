@@ -1,9 +1,9 @@
-import { useState } from 'react'
 import { Search, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import AdminNavbar from '../../components/AdminNavbar'
 import MobileNav from '../../components/MobileNav'
 import StatusBadge from '../../components/StatusBadge'
-import { users as initialUsers } from '../../data/data'
+// ✅ Custom Hook: toda la lógica CRUD centralizada aquí
+import { useUsers } from '../../hooks/useUsers'
 
 const AVATARS = [
   'https://i.pravatar.cc/40?img=1', 'https://i.pravatar.cc/40?img=5',
@@ -12,58 +12,18 @@ const AVATARS = [
   'https://i.pravatar.cc/40?img=15','https://i.pravatar.cc/40?img=20',
 ]
 
-const EMPTY_FORM = { name: '', email: '', role: 'Cliente', status: 'Activo' }
-
 export default function UserManagement() {
-  const [users, setUsers]     = useState(initialUsers)
-  const [search, setSearch]   = useState('')
-  const [modal, setModal]     = useState(null)
-  const [selected, setSelected] = useState(null)
-  const [form, setForm]       = useState(EMPTY_FORM)
-  const [page, setPage]       = useState(1)
-  const [sortBy, setSortBy]   = useState('default')
-  const PER_PAGE = 8
-
-  const filtered = users
-    .filter(u =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name)
-      if (sortBy === 'role') return a.role.localeCompare(b.role)
-      if (sortBy === 'status') return a.status.localeCompare(b.status)
-      return 0
-    })
-
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paginated  = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE)
-
-  const openAdd = () => { setForm(EMPTY_FORM); setSelected(null); setModal('add') }
-  const openEdit = (u) => { setForm({ name: u.name, email: u.email, role: u.role, status: u.status }); setSelected(u); setModal('edit') }
-  const openDelete = (u) => { setSelected(u); setModal('delete') }
-  const closeModal = () => { setModal(null); setSelected(null) }
-
-  const handleSave = () => {
-    if (!form.name.trim() || !form.email.trim()) return
-    if (modal === 'add') {
-      setUsers(prev => [{ id: Date.now(), ...form }, ...prev])
-    } else {
-      setUsers(prev => prev.map(u => u.id === selected.id ? { ...u, ...form } : u))
-    }
-    closeModal()
-  }
-
-  const handleDelete = () => {
-    setUsers(prev => prev.filter(u => u.id !== selected.id))
-    closeModal()
-  }
-
-  const f = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
-
-  // Stats
-  const activeCount = users.filter(u => u.status === 'Activo').length
-  const adminCount  = users.filter(u => u.role === 'Administrador').length
+  const {
+    users, filtered, paginated, totalPages,
+    activeCount, adminCount,
+    search, setSearch,
+    modal, selected, form,
+    page, setPage,
+    sortBy, setSortBy,
+    openAdd, openEdit, openDelete, closeModal,
+    handleSave, handleDelete,
+    setField: f,
+  } = useUsers()
 
   return (
     <div className="min-h-screen bg-cream-100 pb-16 md:pb-0">

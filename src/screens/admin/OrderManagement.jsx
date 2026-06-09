@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import { Search, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import AdminNavbar from '../../components/AdminNavbar'
 import StatusBadge from '../../components/StatusBadge'
-import { orders as initialOrders } from '../../data/data'
+//   Custom Hook: toda la lógica CRUD centralizada aquí
+import { useOrders } from '../../hooks/useOrders'
 
 const AVATARS = [
   'https://i.pravatar.cc/32?img=1', 'https://i.pravatar.cc/32?img=5',
@@ -10,75 +10,17 @@ const AVATARS = [
   'https://i.pravatar.cc/32?img=11','https://i.pravatar.cc/32?img=15',
 ]
 
-const EMPTY_FORM = { orderNumber: '', client: '', total: '', currency: 'USD', status: 'Pendiente', date: '' }
-
-const STATUS_OPTIONS = ['Pendiente', 'Enviado', 'Entregado', 'Cancelado']
-
 export default function OrderManagement() {
-  const [orders, setOrders]   = useState(initialOrders)
-  const [search, setSearch]   = useState('')
-  const [modal, setModal]     = useState(null)
-  const [selected, setSelected] = useState(null)
-  const [form, setForm]       = useState(EMPTY_FORM)
-  const [page, setPage]       = useState(1)
-  const PER_PAGE = 8
-
-  const filtered = orders.filter(o =>
-    o.client.toLowerCase().includes(search.toLowerCase()) ||
-    o.id?.includes?.(search) ||
-    o.orderNumber?.includes?.(search)
-  )
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paginated  = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE)
-
-  const openAdd = () => {
-    const today = new Date()
-    const dd = String(today.getDate()).padStart(2,'0')
-    const mm = String(today.getMonth()+1).padStart(2,'0')
-    const yyyy = today.getFullYear()
-    setForm({ ...EMPTY_FORM, date: `${dd}/${mm}/${yyyy}`,
-      orderNumber: String(Math.floor(100000 + Math.random() * 900000)).slice(0,6).padStart(6,'0') })
-    setSelected(null)
-    setModal('add')
-  }
-
-  const openEdit = (o) => {
-    setForm({ orderNumber: o.id || o.orderNumber, client: o.client, total: o.total, currency: o.currency, status: o.status, date: o.date })
-    setSelected(o)
-    setModal('edit')
-  }
-
-  const openDelete = (o) => { setSelected(o); setModal('delete') }
-  const closeModal = () => { setModal(null); setSelected(null) }
-
-  const handleSave = () => {
-    if (!form.client.trim() || !form.total) return
-    if (modal === 'add') {
-      setOrders(prev => [{
-        id: form.orderNumber,
-        client: form.client,
-        avatar: form.client.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(),
-        total: Number(form.total),
-        currency: form.currency,
-        status: form.status,
-        date: form.date,
-      }, ...prev])
-    } else {
-      setOrders(prev => prev.map(o =>
-        (o.id === selected.id)
-          ? { ...o, id: form.orderNumber, client: form.client, total: Number(form.total), currency: form.currency, status: form.status, date: form.date }
-          : o
-      ))
-    }
-    closeModal()
-  }
-
-  const handleDelete = () => {
-    setOrders(prev => prev.filter(o => o.id !== selected.id))
-    closeModal()
-  }
-
-  const f = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
+  const {
+    orders, filtered, paginated, totalPages,
+    search, setSearch,
+    modal, selected, form,
+    page, setPage,
+    STATUS_OPTIONS,
+    openAdd, openEdit, openDelete, closeModal,
+    handleSave, handleDelete,
+    setField: f,
+  } = useOrders()
 
   return (
     <div className="min-h-screen bg-cream-100 pb-16 md:pb-0">

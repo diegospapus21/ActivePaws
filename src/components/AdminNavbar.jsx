@@ -1,6 +1,7 @@
-import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Package, ShoppingBag, Users, LogOut } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
 import logo from '../assets/LogoDeActivePaws2.png'
+import { useAuth } from '../context/AuthContext'
 
 const adminLinks = [
   { label: 'Inicio', to: '/' },
@@ -11,8 +12,15 @@ const adminLinks = [
 
 export default function AdminNavbar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
 
   const isActive = (path) => location.pathname === path
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <header className="bg-[#EFE4D2] border-b border-amber-200 sticky top-0 z-50 shadow-md">
@@ -53,7 +61,6 @@ export default function AdminNavbar() {
         <div className="flex items-center gap-3">
           <span className="text-sm text-amber-700 font-medium hidden sm:block">¡Hola, Admin!</span>
           
-          {/* Foto de perfil del admin */}
           <div className="w-9 h-9 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center overflow-hidden hover:scale-105 transition-all duration-200">
             <img 
               src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" 
@@ -62,14 +69,13 @@ export default function AdminNavbar() {
             />
           </div>
           
-          {/* Botón de logout */}
-          <Link 
-            to="/login" 
+          <button 
+            onClick={handleLogout}
             className="p-2 text-amber-600 hover:text-red-500 hover:bg-amber-100/50 rounded-lg transition-all duration-200"
             title="Cerrar sesión"
           >
             <LogOut size={18} />
-          </Link>
+          </button>
         </div>
       </div>
     </header>

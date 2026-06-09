@@ -77,6 +77,7 @@ export default function Cart() {
           )}
         </div>
 
+
         {cart.length === 0 ? (
           <div className="text-center py-16 text-bark-400">
             <p className="text-lg mb-4">Tu carrito está vacío</p>
@@ -147,7 +148,7 @@ export default function Cart() {
                 Seguir comprando
               </Link>
               <button onClick={handleCheckout} className="btn-primary flex-1 py-3 text-base">
-                Proceder al pago
+                Proceder al pago...
               </button>
             </div>
           </>

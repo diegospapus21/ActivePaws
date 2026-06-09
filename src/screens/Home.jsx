@@ -3,14 +3,16 @@ import { Truck, Award, ShieldCheck } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductCard from '../components/ProductCard'
 import { bestSellers, products } from '../data/data'
+import { useAuth } from '../context/AuthContext'
 
 export default function Home() {
   const novedades = products.slice(2, 6)
   const topSellers = bestSellers.slice(0, 5)
+  const { isAdmin } = useAuth()
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar isAdmin />
+      <Navbar isAdmin={isAdmin} />
 
       {/* Hero */}
       <section className="relative bg-cream-200 paw-bg overflow-hidden">

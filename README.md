@@ -1,7 +1,7 @@
 Nombre | Carnet |
 |--------|-------|
 | Diego Gabriel Hernandez Colorado  20230048 
-| (Nombre 2) | — |
+| Ian Raul Orellana Meza | 20240211 |
 | (Nombre 3) | — |
 | (Nombre 4) | — |
 | Alvaro Alexander Vasquez Cortez  20240408 

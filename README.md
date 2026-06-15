@@ -8,6 +8,8 @@ Integrantes:
  
  Marcos Alejandro Torres Rodriguez 20200209
 
+ David Eduardo Lopez Miranda 20240089
+ 
  Descripción
 
 Tienda en línea para mascotas ActivePaws que ofrece ropa y accesorios para perros y gatos.  

@@ -1,46 +1,14 @@
-Nombre | Carnet |
-|--------|-------|
-| Diego Gabriel Hernandez Colorado  20230048 
-| Ian Raul Orellana Meza | 20240211 |
-| (Nombre 3) | — |
-| (Nombre 4) | — |
-| Alvaro Alexander Vasquez Cortez  20240408 
+Integrantes:
+
+ Diego Gabriel Hernandez Colorado  20230048 
+ Ian Raul Orellana Meza  20240211 
+ Alvaro Alexander Vasquez Cortez  20240408 
 
  Descripción
 
 Tienda en línea para mascotas ActivePaws que ofrece ropa y accesorios para perros y gatos.  
 Esta primera entrega implementa las interfaces en React JS + Vite + Tailwind CSS con navegación funcional y datos quemados (sin conexión a API).
 
-
-Estructura de carpetas
-
-src/
-├── components/          
-│   ├── Navbar.jsx
-│   ├── AdminNavbar.jsx
-│   ├── ProductCard.jsx
-│   ├── StatusBadge.jsx
-│   └── MobileNav.jsx
-├── hooks/ 
-├── screens/             
-│   ├── Home.jsx
-│   ├── Login.jsx
-│   ├── Register.jsx
-│   ├── ProductList.jsx
-│   ├── ProductDetail.jsx
-│   ├── Cart.jsx
-│   ├── Payment.jsx
-│   ├── Reviews.jsx
-│   └── admin/
-│       ├── Dashboard.jsx
-│       ├── ProductManagement.jsx
-│       ├── OrderManagement.jsx
-│       └── UserManagement.jsx
-├── data/
-│   └── data.js          
-├── App.jsx              
-├── main.jsx
-└── index.css
 
  Instalación y ejecución
 

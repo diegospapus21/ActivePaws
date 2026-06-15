@@ -1,8 +1,12 @@
 Integrantes:
 
  Diego Gabriel Hernandez Colorado  20230048 
+ 
  Ian Raul Orellana Meza  20240211 
+ 
  Alvaro Alexander Vasquez Cortez  20240408 
+ 
+ Marcos Alejandro Torres Rodriguez 20200209
 
  Descripción
 

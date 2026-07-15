@@ -1,12 +1,22 @@
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 
 export default function Register() {
   const navigate      = useNavigate()
+  const { register: registerUser, verifyCode, resendCode } = useAuth()
   const { showToast } = useToast()
 
-  // ── React Hook Form ────────────────────────────────────────────────────────
+  const [pendingEmail, setPendingEmail] = useState(null) // correo en espera de verificación
+  const [emailSent, setEmailSent] = useState(true)
+  const [code, setCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [resending, setResending] = useState(false)
+  const codeInputRef = useRef(null)
+
+  // ── React Hook Form (formulario de registro) ────────────────────────────────
   const {
     register,
     handleSubmit,
@@ -19,15 +29,101 @@ export default function Register() {
     },
   })
 
-  // watch('password') permite comparar con confirmPassword
   const passwordValue = watch('password')
 
-  // ── Envío del formulario ───────────────────────────────────────────────────
-  const onSubmit = (data) => {
-    // Aquí iría la llamada al API. Por ahora simulamos con un delay.
-    console.log('Nuevo usuario registrado:', data)
-    showToast('¡Cuenta creada exitosamente!', 'success')
+  const onSubmit = async (data) => {
+    const result = await registerUser({
+      name: data.name, email: data.email, username: data.username, password: data.password,
+    })
+
+    if (!result.ok) {
+      showToast(result.message, 'error')
+      return
+    }
+
+    showToast(result.message, result.emailSent ? 'success' : 'warning')
+    setEmailSent(result.emailSent)
+    setPendingEmail(result.email)
+  }
+
+  // ── Verificación del código de 6 dígitos ────────────────────────────────────
+  const handleVerify = async () => {
+    if (code.trim().length !== 6) {
+      showToast('Ingresa el código de 6 dígitos.', 'error')
+      return
+    }
+    setVerifying(true)
+    const result = await verifyCode(pendingEmail, code.trim())
+    setVerifying(false)
+
+    if (!result.ok) {
+      showToast(result.message, 'error')
+      return
+    }
+
+    showToast(result.message, 'success')
     navigate('/login')
+  }
+
+  const handleResend = async () => {
+    setResending(true)
+    const result = await resendCode(pendingEmail)
+    setResending(false)
+    showToast(result.message, result.ok ? 'success' : 'error')
+  }
+
+  // ── Pantalla de verificación de código ──────────────────────────────────────
+  if (pendingEmail) {
+    return (
+      <div className="min-h-screen bg-cream-100 paw-bg flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center gap-4 text-center">
+          <div className="w-16 h-16 rounded-full bg-paw-50 border-2 border-paw-300 flex items-center justify-center text-2xl">
+            📩
+          </div>
+          <h1 className="font-display text-xl text-bark-800 font-semibold">Verifica tu correo</h1>
+          <p className="text-sm text-bark-500">
+            Enviamos un código de 6 dígitos a <b>{pendingEmail}</b>. Ingrésalo para activar tu cuenta.
+          </p>
+          {!emailSent && (
+            <p className="text-xs text-red-500 bg-red-50 rounded-lg p-2">
+              El servidor no tiene configurado el envío real de correos (SMTP). Pide al administrador
+              que revise la consola del backend para ver el código, o configure las variables SMTP.
+            </p>
+          )}
+
+          <input
+            ref={codeInputRef}
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="000000"
+            value={code}
+            onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="input-field text-center text-2xl tracking-[0.5em] font-bold"
+          />
+
+          <button
+            onClick={handleVerify}
+            disabled={verifying || code.length !== 6}
+            className="btn-primary w-full disabled:opacity-60"
+          >
+            {verifying ? 'Verificando...' : 'Verificar cuenta'}
+          </button>
+
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="text-xs text-paw-600 font-semibold hover:underline disabled:opacity-60"
+          >
+            {resending ? 'Reenviando...' : '¿No te llegó? Reenviar código'}
+          </button>
+
+          <Link to="/login" className="text-xs text-bark-400 hover:underline">
+            Volver a iniciar sesión
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (

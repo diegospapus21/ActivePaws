@@ -1,16 +1,17 @@
-import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import ProductCard from '../components/ProductCard'
-import { dogProducts, catProducts, accessories, bestSellers } from '../data/data'
+import { usePublicProducts } from '../hooks/usePublicProducts'
+
+const CATEGORY_MAP = {
+  perros:      { title: 'Ropa para perros', query: 'Ropa para Perros' },
+  gatos:       { title: 'Ropa de gatos',    query: 'Ropa para Gatos' },
+  accesorios:  { title: 'Accesorios',       query: 'Accesorios' },
+}
 
 export default function ProductList({ category = 'perros' }) {
-  const categoryMap = {
-    perros: { title: 'Ropa para perros', products: dogProducts },
-    gatos:  { title: 'Ropa de gatos',    products: catProducts },
-    accesorios: { title: 'Accesorios',   products: accessories },
-  }
-  const { title, products } = categoryMap[category] || categoryMap.perros
-  const topSellers = bestSellers.slice(0, 5)
+  const { title, query } = CATEGORY_MAP[category] || CATEGORY_MAP.perros
+  const { products, loading } = usePublicProducts(query)
+  const topSellers = [...products].sort((a, b) => b.sold - a.sold).slice(0, 5)
 
   return (
     <div className="min-h-screen flex flex-col pb-16 md:pb-0">
@@ -23,9 +24,15 @@ export default function ProductList({ category = 'perros' }) {
         </h1>
 
         {/* Product grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
-          {products.map(p => <ProductCard key={p.id} product={p} />)}
-        </div>
+        {loading ? (
+          <p className="text-center text-bark-400 py-10">Cargando productos...</p>
+        ) : products.length === 0 ? (
+          <p className="text-center text-bark-400 py-10">No hay productos en esta categoría todavía.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
+            {products.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+        )}
 
         {/* Promo banners */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
@@ -60,13 +67,17 @@ export default function ProductList({ category = 'perros' }) {
         </div>
 
         {/* Lo más vendido */}
-        <h2 className="font-cursive text-2xl text-paw-600 text-center mb-4">
-          Lo mas vendido
-          <span className="block w-16 h-0.5 bg-paw-300 mx-auto mt-1" />
-        </h2>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-          {topSellers.map(p => <ProductCard key={p.id} product={p} size="sm" />)}
-        </div>
+        {topSellers.length > 0 && (
+          <>
+            <h2 className="font-cursive text-2xl text-paw-600 text-center mb-4">
+              Lo mas vendido
+              <span className="block w-16 h-0.5 bg-paw-300 mx-auto mt-1" />
+            </h2>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+              {topSellers.map(p => <ProductCard key={p.id} product={p} size="sm" />)}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

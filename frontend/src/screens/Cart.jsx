@@ -1,62 +1,29 @@
-import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus, Minus, Trash2, ArrowLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 export default function Cart() {
   const navigate = useNavigate()
-  const [cart, setCart] = useState([])
-  const [total, setTotal] = useState(0)
-
-  useEffect(() => {
-    loadCart()
-  }, [])
-
-  const loadCart = () => {
-    const savedCart = localStorage.getItem('cart')
-    if (savedCart) {
-      const cartData = JSON.parse(savedCart)
-      setCart(cartData)
-      const totalAmount = cartData.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-      setTotal(totalAmount)
-    }
-  }
-
-  const updateQuantity = (id, delta) => {
-    const newCart = cart.map(item => {
-      if (item.id === id) {
-        const newQuantity = item.quantity + delta
-        return { ...item, quantity: Math.max(1, newQuantity) }
-      }
-      return item
-    })
-    setCart(newCart)
-    localStorage.setItem('cart', JSON.stringify(newCart))
-    const newTotal = newCart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    setTotal(newTotal)
-    window.dispatchEvent(new Event('cartUpdated'))
-  }
-
-  const removeItem = (id) => {
-    const newCart = cart.filter(item => item.id !== id)
-    setCart(newCart)
-    localStorage.setItem('cart', JSON.stringify(newCart))
-    const newTotal = newCart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    setTotal(newTotal)
-    window.dispatchEvent(new Event('cartUpdated'))
-  }
-
-  const clearCart = () => {
-    setCart([])
-    localStorage.removeItem('cart')
-    setTotal(0)
-    window.dispatchEvent(new Event('cartUpdated'))
-  }
+  const { cart, total, updateQuantity, removeItem, clearCart } = useCart()
+  const { isLogged, isConfirmed } = useAuth()
+  const { showToast } = useToast()
 
   const handleCheckout = () => {
-    if (cart.length > 0) {
-      navigate('/pago')
+    if (cart.length === 0) return
+
+    if (!isLogged) {
+      showToast('Inicia sesión para finalizar tu compra.', 'warning')
+      navigate('/login')
+      return
     }
+    if (!isConfirmed) {
+      showToast('Debes confirmar tu correo electrónico antes de comprar.', 'warning')
+      return
+    }
+    navigate('/pago')
   }
 
   return (
@@ -77,6 +44,17 @@ export default function Cart() {
           )}
         </div>
 
+        {!isLogged && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-lg p-3 mb-4">
+            Puedes armar tu carrito libremente. Para finalizar la compra necesitarás{' '}
+            <Link to="/login" className="underline font-semibold">iniciar sesión</Link>.
+          </div>
+        )}
+        {isLogged && !isConfirmed && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg p-3 mb-4">
+            Tu correo aún no está confirmado. Revisa tu bandeja de entrada para poder comprar.
+          </div>
+        )}
 
         {cart.length === 0 ? (
           <div className="text-center py-16 text-bark-400">
@@ -103,7 +81,7 @@ export default function Cart() {
                     </div>
                     <div>
                       <p className="text-xs text-bark-400">Precio:</p>
-                      <p className="text-paw-600 font-bold">${item.price.toLocaleString()}.00 {item.currency}</p>
+                      <p className="text-paw-600 font-bold">${Number(item.price).toLocaleString()}.00 {item.currency}</p>
                     </div>
                     <div className="flex items-center gap-3 mt-auto">
                       <button
@@ -120,7 +98,7 @@ export default function Cart() {
                         <Plus size={12} />
                       </button>
                       <span className="ml-auto text-xs font-semibold text-paw-600">
-                        ${(item.price * item.quantity).toLocaleString()} MXN
+                        ${(item.price * item.quantity).toLocaleString()} {item.currency}
                       </span>
                     </div>
                   </div>

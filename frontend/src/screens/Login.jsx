@@ -17,19 +17,22 @@ export default function Login() {
   } = useForm({ defaultValues: { username: '', password: '' } })
 
   // ── Envío del formulario ───────────────────────────────────────────────────
-  const onSubmit = (data) => {
-    const result = login(data.username, data.password)
+  const onSubmit = async (data) => {
+    const result = await login(data.username, data.password)
 
     if (!result.ok) {
+      if (result.reason === 'unverified') {
+        showToast(result.message, 'warning')
+        navigate(`/verificar?email=${encodeURIComponent(result.email || '')}`)
+        return
+      }
       setError('password', { type: 'manual', message: result.message })
       showToast(result.message, 'error')
       return
     }
 
     showToast('¡Bienvenido de nuevo!', 'success')
-
-    if (data.username === 'admin') navigate('/admin')
-    else navigate('/')
+    navigate(result.user.role === 'admin' ? '/admin' : '/')
   }
 
   return (
@@ -71,9 +74,12 @@ export default function Login() {
 
           {/* Campo: Contraseña */}
           <div>
-            <label className="text-sm font-semibold text-bark-700 mb-1 block">
-              Contraseña:
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-semibold text-bark-700 block">
+                Contraseña:
+              </label>
+              <Link to="/recuperar" className="text-xs text-paw-600 hover:underline">¿Olvidaste tu contraseña?</Link>
+            </div>
             <input
               type="password"
               placeholder="••••••••"
@@ -100,7 +106,7 @@ export default function Login() {
           <div className="bg-cream-100 rounded-lg p-3 text-xs text-bark-500 space-y-1">
             <p className="font-semibold text-bark-600">Credenciales de prueba:</p>
             <p> Admin: <b>admin</b> / <b>admin123</b></p>
-            <p> Cliente: <b>cliente</b> / <b>cliente123</b></p>
+            <p> Cliente: <b>luism</b> / <b>password123</b></p>
           </div>
 
         </form>

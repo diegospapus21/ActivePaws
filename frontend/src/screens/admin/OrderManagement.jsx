@@ -1,84 +1,19 @@
-import { useState } from 'react'
 import { Search, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import AdminNavbar from '../../components/AdminNavbar'
 import StatusBadge from '../../components/StatusBadge'
-import { orders as initialOrders } from '../../data/data'
-
-const AVATARS = [
-  'https://i.pravatar.cc/32?img=1', 'https://i.pravatar.cc/32?img=5',
-  'https://i.pravatar.cc/32?img=8', 'https://i.pravatar.cc/32?img=9',
-  'https://i.pravatar.cc/32?img=11','https://i.pravatar.cc/32?img=15',
-]
-
-const EMPTY_FORM = { orderNumber: '', client: '', total: '', currency: 'USD', status: 'Pendiente', date: '' }
-
-const STATUS_OPTIONS = ['Pendiente', 'Enviado', 'Entregado', 'Cancelado']
+import { useOrders } from '../../hooks/useOrders'
 
 export default function OrderManagement() {
-  const [orders, setOrders]   = useState(initialOrders)
-  const [search, setSearch]   = useState('')
-  const [modal, setModal]     = useState(null)
-  const [selected, setSelected] = useState(null)
-  const [form, setForm]       = useState(EMPTY_FORM)
-  const [page, setPage]       = useState(1)
-  const PER_PAGE = 8
-
-  const filtered = orders.filter(o =>
-    o.client.toLowerCase().includes(search.toLowerCase()) ||
-    o.id?.includes?.(search) ||
-    o.orderNumber?.includes?.(search)
-  )
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paginated  = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE)
-
-  const openAdd = () => {
-    const today = new Date()
-    const dd = String(today.getDate()).padStart(2,'0')
-    const mm = String(today.getMonth()+1).padStart(2,'0')
-    const yyyy = today.getFullYear()
-    setForm({ ...EMPTY_FORM, date: `${dd}/${mm}/${yyyy}`,
-      orderNumber: String(Math.floor(100000 + Math.random() * 900000)).slice(0,6).padStart(6,'0') })
-    setSelected(null)
-    setModal('add')
-  }
-
-  const openEdit = (o) => {
-    setForm({ orderNumber: o.id || o.orderNumber, client: o.client, total: o.total, currency: o.currency, status: o.status, date: o.date })
-    setSelected(o)
-    setModal('edit')
-  }
-
-  const openDelete = (o) => { setSelected(o); setModal('delete') }
-  const closeModal = () => { setModal(null); setSelected(null) }
-
-  const handleSave = () => {
-    if (!form.client.trim() || !form.total) return
-    if (modal === 'add') {
-      setOrders(prev => [{
-        id: form.orderNumber,
-        client: form.client,
-        avatar: form.client.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(),
-        total: Number(form.total),
-        currency: form.currency,
-        status: form.status,
-        date: form.date,
-      }, ...prev])
-    } else {
-      setOrders(prev => prev.map(o =>
-        (o.id === selected.id)
-          ? { ...o, id: form.orderNumber, client: form.client, total: Number(form.total), currency: form.currency, status: form.status, date: form.date }
-          : o
-      ))
-    }
-    closeModal()
-  }
-
-  const handleDelete = () => {
-    setOrders(prev => prev.filter(o => o.id !== selected.id))
-    closeModal()
-  }
-
-  const f = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
+  const {
+    loading, paginated, filtered, totalPages,
+    search, setSearch,
+    modal, selected, form,
+    page, setPage,
+    STATUS_OPTIONS,
+    openAdd, openEdit, openDelete, closeModal,
+    handleSave, handleDelete,
+    setField,
+  } = useOrders()
 
   return (
     <div className="min-h-screen bg-cream-100 pb-16 md:pb-0">
@@ -100,11 +35,6 @@ export default function OrderManagement() {
             <input type="text" placeholder="Buscar pedidos..." className="input-field pl-9 py-2"
               value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
           </div>
-          <select className="input-field py-2 w-auto text-sm ml-auto">
-            <option>Ordenar por</option>
-            <option>Más recientes</option>
-            <option>Total mayor</option>
-          </select>
         </div>
 
         {/* Table */}
@@ -112,7 +42,6 @@ export default function OrderManagement() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-cream-200">
-                <th className="p-3 w-8"><input type="checkbox" className="accent-paw-500" /></th>
                 <th className="p-3 text-left text-bark-500 font-semibold">ID pedido</th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Cliente</th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Total</th>
@@ -122,17 +51,20 @@ export default function OrderManagement() {
               </tr>
             </thead>
             <tbody>
-              {paginated.length === 0 && (
-                <tr><td colSpan={7} className="text-center py-10 text-bark-400">No se encontraron pedidos.</td></tr>
+              {loading && (
+                <tr><td colSpan={6} className="text-center py-10 text-bark-400">Cargando pedidos...</td></tr>
               )}
-              {paginated.map((o, i) => (
-                <tr key={`${o.id}-${i}`} className="border-b border-cream-100 hover:bg-cream-50 transition-colors">
-                  <td className="p-3"><input type="checkbox" className="accent-paw-500" /></td>
-                  <td className="p-3 font-mono font-semibold text-bark-700">{o.id || o.orderNumber}</td>
+              {!loading && paginated.length === 0 && (
+                <tr><td colSpan={6} className="text-center py-10 text-bark-400">No se encontraron pedidos.</td></tr>
+              )}
+              {!loading && paginated.map((o) => (
+                <tr key={o.id} className="border-b border-cream-100 hover:bg-cream-50 transition-colors">
+                  <td className="p-3 font-mono font-semibold text-bark-700">{o.orderNumber || o.id}</td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <img src={AVATARS[i % AVATARS.length]} alt={o.client}
-                        className="w-7 h-7 rounded-full object-cover bg-cream-200" />
+                      <div className="w-7 h-7 rounded-full bg-paw-100 flex items-center justify-center text-paw-700 text-xs font-bold">
+                        {o.avatar || o.client?.charAt(0)}
+                      </div>
                       <span className="text-bark-700 font-medium">{o.client}</span>
                     </div>
                   </td>
@@ -192,36 +124,30 @@ export default function OrderManagement() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-bark-600 mb-1 block">ID Pedido</label>
-                  <input className="input-field" value={form.orderNumber} onChange={f('orderNumber')} />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-bark-600 mb-1 block">Fecha</label>
-                  <input className="input-field" placeholder="DD/MM/AAAA" value={form.date} onChange={f('date')} />
-                </div>
+              <div>
+                <label className="text-xs font-semibold text-bark-600 mb-1 block">Fecha</label>
+                <input className="input-field" placeholder="DD/MM/AAAA" value={form.date} onChange={setField('date')} />
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Nombre del cliente *</label>
-                <input className="input-field" placeholder="Nombre completo" value={form.client} onChange={f('client')} />
+                <input className="input-field" placeholder="Nombre completo" value={form.client} onChange={setField('client')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-bark-600 mb-1 block">Total *</label>
-                  <input type="number" className="input-field" placeholder="0.00" value={form.total} onChange={f('total')} />
+                  <input type="number" className="input-field" placeholder="0.00" value={form.total} onChange={setField('total')} />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-bark-600 mb-1 block">Moneda</label>
-                  <select className="input-field" value={form.currency} onChange={f('currency')}>
-                    <option>USD</option>
+                  <select className="input-field" value={form.currency} onChange={setField('currency')}>
                     <option>MXN</option>
+                    <option>USD</option>
                   </select>
                 </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Estado</label>
-                <select className="input-field" value={form.status} onChange={f('status')}>
+                <select className="input-field" value={form.status} onChange={setField('status')}>
                   {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
@@ -252,7 +178,7 @@ export default function OrderManagement() {
               </div>
             </div>
             <p className="text-sm text-bark-600 mb-5 bg-cream-100 rounded-lg p-3">
-              ¿Eliminar el pedido <b>#{selected.id}</b> de <b>{selected.client}</b>?
+              ¿Eliminar el pedido <b>#{selected.orderNumber || selected.id}</b> de <b>{selected.client}</b>?
             </p>
             <div className="flex gap-3">
               <button onClick={closeModal} className="btn-secondary flex-1">Cancelar</button>

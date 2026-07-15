@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Search, Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react'
+import { ShoppingCart, Search, Menu, X, User, LogOut, LayoutDashboard, Package } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 import logo from '../assets/LogoDeActivePaws2.png'
 
 const navLinks = [
@@ -16,7 +17,8 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { currentUser, logout } = useAuth()
+  const { user, logout, isConfirmed } = useAuth()
+  const { itemCount } = useCart()
 
   const isActive = (path) => location.pathname === path
 
@@ -69,7 +71,11 @@ export default function Navbar() {
           
           <Link to="/carrito" className="p-2 text-amber-700 hover:text-amber-600 hover:bg-amber-100/50 rounded-lg transition-all duration-200 relative">
             <ShoppingCart size={18} />
-            <span className="absolute -top-1 -right-1 bg-amber-600 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold">3</span>
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-amber-600 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                {itemCount > 9 ? '9+' : itemCount}
+              </span>
+            )}
           </Link>
 
           {/* User menu con dropdown */}
@@ -78,20 +84,18 @@ export default function Navbar() {
               onClick={() => setUserMenuOpen(prev => !prev)}
               className="flex items-center gap-1.5 p-1.5 rounded-xl hover:bg-amber-100/50 transition-all duration-200"
             >
-              {currentUser ? (
-                <img
-                  src={currentUser.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
-                  alt={currentUser.name}
-                  className="w-9 h-9 rounded-full object-cover border-2 border-amber-500 hover:border-amber-600 transition-all duration-200 hover:scale-105"
-                />
+              {user ? (
+                <div className="w-9 h-9 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center text-amber-700 font-bold text-sm hover:border-amber-600 transition-all duration-200 hover:scale-105">
+                  {user.name?.charAt(0).toUpperCase()}
+                </div>
               ) : (
                 <div className="w-9 h-9 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-amber-600">
                   <User size={18} />
                 </div>
               )}
-              {currentUser && (
+              {user && (
                 <span className="hidden md:block text-sm font-medium text-amber-700 max-w-[80px] truncate">
-                  {currentUser.name.split(' ')[0]}
+                  {user.name.split(' ')[0]}
                 </span>
               )}
             </button>
@@ -99,27 +103,39 @@ export default function Navbar() {
             {/* Dropdown menu */}
             {userMenuOpen && (
               <div className="absolute right-0 top-11 bg-white rounded-2xl shadow-lg border border-amber-200 py-2 min-w-[200px] z-50">
-                {currentUser ? (
+                {user ? (
                   <>
                     <div className="px-4 py-2 border-b border-amber-100">
-                      <p className="text-sm font-semibold text-amber-800">{currentUser.name}</p>
-                      <p className="text-xs text-amber-500 truncate">{currentUser.email}</p>
+                      <p className="text-sm font-semibold text-amber-800">{user.name}</p>
+                      <p className="text-xs text-amber-500 truncate">{user.email}</p>
                       <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-semibold ${
-                        currentUser.role === 'admin'
+                        user.role === 'admin'
                           ? 'bg-amber-100 text-amber-700'
                           : 'bg-amber-50 text-amber-600'
                       }`}>
-                        {currentUser.role === 'admin' ? 'Administrador' : 'Cliente'}
+                        {user.role === 'admin' ? 'Administrador' : 'Cliente'}
                       </span>
+                      {!isConfirmed && (
+                        <p className="text-xs text-red-500 mt-1">⚠ Correo sin confirmar</p>
+                      )}
                     </div>
 
-                    {currentUser.role === 'admin' && (
+                    {user.role === 'admin' && (
                       <Link
                         to="/admin"
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
                       >
                         <LayoutDashboard size={14} /> Panel Admin
+                      </Link>
+                    )}
+                    {user.role !== 'admin' && (
+                      <Link
+                        to="/mis-pedidos"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
+                      >
+                        <Package size={14} /> Mis pedidos
                       </Link>
                     )}
 
@@ -180,26 +196,32 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="border-t border-amber-200 pt-3 mt-1">
-            {currentUser ? (
+            {user ? (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3 px-3 py-2">
-                  <img
-                    src={currentUser.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"}
-                    alt={currentUser.name}
-                    className="w-8 h-8 rounded-full object-cover border-2 border-amber-400"
-                  />
+                  <div className="w-8 h-8 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-amber-700 font-bold text-xs">
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
                   <div>
-                    <p className="text-sm font-semibold text-amber-800">{currentUser.name}</p>
-                    <p className="text-xs text-amber-600">{currentUser.role === 'admin' ? 'Admin' : 'Cliente'}</p>
+                    <p className="text-sm font-semibold text-amber-800">{user.name}</p>
+                    <p className="text-xs text-amber-600">{user.role === 'admin' ? 'Admin' : 'Cliente'}</p>
                   </div>
                 </div>
-                {currentUser.role === 'admin' && (
+                {user.role === 'admin' ? (
                   <Link
                     to="/admin"
                     onClick={() => setMobileOpen(false)}
                     className="text-sm font-semibold py-2 px-3 rounded-lg bg-amber-100 text-amber-700"
                   >
                     Panel Admin
+                  </Link>
+                ) : (
+                  <Link
+                    to="/mis-pedidos"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-sm font-semibold py-2 px-3 rounded-lg bg-amber-100 text-amber-700"
+                  >
+                    Mis pedidos
                   </Link>
                 )}
                 <button

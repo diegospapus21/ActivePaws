@@ -1,15 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { api } from '../api/client'
 import { useToast } from '../context/ToastContext'
-import { products as initialProducts } from '../data/data'
 
 /**
- * useProducts
- * 
- * Custom hook que centraliza toda la lógica del CRUD de productos.
- * Los componentes solo llaman a las funciones y reciben el estado.
- *
- * Uso:
- *   const { products, openAdd, openEdit, openDelete, handleSave, handleDelete, ... } = useProducts()
+ * useProducts (panel admin)
+ * ──────────────────────────
+ * Custom hook que centraliza el CRUD de productos contra el backend real.
  */
 export function useProducts() {
   const { showToast } = useToast()
@@ -19,29 +15,40 @@ export function useProducts() {
     stock: '', description: '', status: 'Activo', image: '',
   }
 
-  const [products, setProducts] = useState(initialProducts)
+  const [products, setProducts] = useState([])
+  const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
-  const [modal, setModal]       = useState(null)      // null || 'add' | 'edit' || 'delete'
+  const [modal, setModal]       = useState(null)      // null | 'add' | 'edit' | 'delete'
   const [selected, setSelected] = useState(null)
   const [form, setForm]         = useState(EMPTY_FORM)
   const [page, setPage]         = useState(1)
   const [menuOpen, setMenuOpen] = useState(null)
   const PER_PAGE = 8
 
-  //  Filtrado y paginación 
+  const loadProducts = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await api.get('/products')
+      setProducts(data)
+    } catch (err) {
+      showToast(err.message || 'No se pudieron cargar los productos.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [showToast])
+
+  useEffect(() => { loadProducts() }, [loadProducts])
+
+  // ── Filtrado y paginación ──────────────────────────────────────────────────
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.category.toLowerCase().includes(search.toLowerCase())
   )
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
+  const totalPages = Math.ceil(filtered.length / PER_PAGE) || 1
   const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
-  // Abrir modals
-  const openAdd = () => {
-    setForm(EMPTY_FORM)
-    setSelected(null)
-    setModal('add')
-  }
+  // ── Abrir modals ────────────────────────────────────────────────────────────
+  const openAdd = () => { setForm(EMPTY_FORM); setSelected(null); setModal('add') }
 
   const openEdit = (product) => {
     setForm({
@@ -55,68 +62,56 @@ export function useProducts() {
     setMenuOpen(null)
   }
 
-  const openDelete = (product) => {
-    setSelected(product)
-    setModal('delete')
-    setMenuOpen(null)
-  }
+  const openDelete = (product) => { setSelected(product); setModal('delete'); setMenuOpen(null) }
+  const closeModal = () => { setModal(null); setSelected(null) }
 
-  const closeModal = () => {
-    setModal(null)
-    setSelected(null)
-  }
-
-  //  Operaciones CRUD
-  const handleSave = () => {
+  // ── Operaciones CRUD ──────────────────────────────────────────────────────
+  const handleSave = async () => {
     if (!form.name.trim() || !form.price || !form.stock) return
 
-    if (modal === 'add') {
-      const newProduct = {
-        ...form,
-        id: Date.now(),
-        price: Number(form.price),
-        stock: Number(form.stock),
-        sold: 0,
-        tags: [],
-        image: form.image ||
-          'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=300&h=300&fit=crop',
-      }
-      setProducts(prev => [newProduct, ...prev])
-      showToast(`Producto "${form.name}" agregado correctamente.`, 'success')
-    } else if (modal === 'edit') {
-      setProducts(prev =>
-        prev.map(p =>
-          p.id === selected.id
-            ? { ...p, ...form, price: Number(form.price), stock: Number(form.stock) }
-            : p
-        )
-      )
-      showToast(`Producto "${form.name}" actualizado.`, 'info')
+    const payload = {
+      ...form,
+      price: Number(form.price),
+      stock: Number(form.stock),
     }
 
-    closeModal()
+    try {
+      if (modal === 'add') {
+        await api.post('/products', payload)
+        showToast(`Producto "${form.name}" agregado correctamente.`, 'success')
+      } else if (modal === 'edit') {
+        await api.put(`/products/${selected.id}`, payload)
+        showToast(`Producto "${form.name}" actualizado.`, 'info')
+      }
+      await loadProducts()
+      closeModal()
+    } catch (err) {
+      showToast(err.message || 'Ocurrió un error al guardar el producto.', 'error')
+    }
   }
 
-  const handleDelete = () => {
-    setProducts(prev => prev.filter(p => p.id !== selected.id))
-    showToast(`Producto "${selected.name}" eliminado.`, 'error')
-    closeModal()
+  const handleDelete = async () => {
+    try {
+      await api.del(`/products/${selected.id}`)
+      showToast(`Producto "${selected.name}" eliminado.`, 'error')
+      await loadProducts()
+      closeModal()
+    } catch (err) {
+      showToast(err.message || 'No se pudo eliminar el producto.', 'error')
+    }
   }
 
-  // Helper para actualizar campos del formulario
   const setField = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
 
   return {
-    // Estado
-    products, filtered, paginated, totalPages,
+    products, loading, filtered, paginated, totalPages,
     search, setSearch,
     modal, selected, form,
     page, setPage,
     menuOpen, setMenuOpen,
     PER_PAGE,
-    // Acciones
     openAdd, openEdit, openDelete, closeModal,
     handleSave, handleDelete,
-    setField,
+    setField, reload: loadProducts,
   }
 }

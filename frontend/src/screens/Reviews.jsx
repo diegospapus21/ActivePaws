@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { Star, ShoppingCart, Menu } from 'lucide-react'
-import MobileNav from '../components/MobileNav'
-
-const mockReviews = [
-  { id: 1, user: 'María G.', rating: 5, comment: 'Excelente calidad, mi perrito quedó muy cómodo.', date: '10/03/2026' },
-  { id: 2, user: 'Carlos R.', rating: 4, comment: 'Bonito diseño aunque tardó un poco en llegar.', date: '08/03/2026' },
-  { id: 3, user: 'Ana P.',    rating: 5, comment: 'Mi gata lo usa todos los días, perfecto material.', date: '05/03/2026' },
-]
+import { useParams, Link } from 'react-router-dom'
+import { Star, ArrowLeft } from 'lucide-react'
+import Navbar from '../components/Navbar'
+import { useReviews } from '../hooks/useReviews'
+import { useProductDetail } from '../hooks/usePublicProducts'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 function StarRating({ value, onChange, readonly = false }) {
   return (
@@ -16,12 +15,9 @@ function StarRating({ value, onChange, readonly = false }) {
           key={n}
           type="button"
           onClick={() => !readonly && onChange?.(n)}
-          className={`${readonly ? 'cursor-default' : 'cursor-pointer'}`}
+          className={readonly ? 'cursor-default' : 'cursor-pointer'}
         >
-          <Star
-            size={16}
-            className={n <= value ? 'text-paw-400 fill-paw-400' : 'text-cream-300'}
-          />
+          <Star size={16} className={n <= value ? 'text-paw-400 fill-paw-400' : 'text-cream-300'} />
         </button>
       ))}
     </div>
@@ -29,20 +25,24 @@ function StarRating({ value, onChange, readonly = false }) {
 }
 
 export default function Reviews() {
-  const [reviews, setReviews] = useState(mockReviews)
+  const { id } = useParams()
+  const { product } = useProductDetail(id)
+  const { reviews, loading, avg, canReview, checkingEligibility, submitReview } = useReviews(id)
+  const { isLogged } = useAuth()
+  const { showToast } = useToast()
+
   const [showForm, setShowForm] = useState(false)
   const [newRating, setNewRating] = useState(0)
   const [newComment, setNewComment] = useState('')
 
-  const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
-  const total = reviews.length + 231  // simulated total
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!newRating || !newComment.trim()) return
-    setReviews([
-      { id: Date.now(), user: 'Tú', rating: newRating, comment: newComment, date: new Date().toLocaleDateString('es-MX') },
-      ...reviews,
-    ])
+    const result = await submitReview(newRating, newComment.trim())
+    if (!result.ok) {
+      showToast(result.message, 'error')
+      return
+    }
+    showToast('¡Gracias por tu reseña!', 'success')
     setNewRating(0)
     setNewComment('')
     setShowForm(false)
@@ -50,62 +50,39 @@ export default function Reviews() {
 
   return (
     <div className="min-h-screen bg-cream-100 paw-bg pb-20 md:pb-0">
-      {/* Mobile header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-cream-50 border-b border-cream-200 sticky top-0 z-40">
-        <button><Menu size={20} className="text-bark-600" /></button>
-        <h1 className="font-cursive text-xl text-bark-800">Reseñas</h1>
-        <button className="relative">
-          <ShoppingCart size={20} className="text-bark-600" />
-          <span className="absolute -top-1 -right-1 bg-paw-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">3</span>
-        </button>
-      </header>
+      <Navbar />
 
       <div className="max-w-lg mx-auto px-4 py-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Link to={id ? `/producto/${id}` : '/'} className="text-paw-500 hover:text-paw-600">
+            <ArrowLeft size={18} />
+          </Link>
+          <h1 className="font-cursive text-2xl text-bark-800">
+            Reseñas {product ? `— ${product.name}` : ''}
+          </h1>
+        </div>
+
         {/* Summary */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <span className="text-4xl font-bold text-paw-600">{avg}</span>
             <div>
               <StarRating value={Math.round(avg)} readonly />
-              <p className="text-xs text-bark-400 mt-0.5">({total.toLocaleString()})</p>
+              <p className="text-xs text-bark-400 mt-0.5">({reviews.length} reseñas)</p>
             </div>
           </div>
-          <select className="input-field py-1.5 text-xs w-auto">
-            <option>Ordenar por</option>
-            <option>Más recientes</option>
-            <option>Mejor puntuados</option>
-          </select>
-        </div>
-
-        {/* Rating bars */}
-        <div className="flex flex-col gap-1.5 mb-6">
-          {[5, 4, 3, 2, 1].map(n => {
-            const count = reviews.filter(r => r.rating === n).length
-            const pct = total > 0 ? (count / total) * 100 : 0
-            return (
-              <div key={n} className="flex items-center gap-2">
-                <div className="flex gap-0.5">
-                  {[1, 2].map(i => (
-                    <Star key={i} size={12} className={i <= (n > 3 ? 2 : 1) ? 'text-paw-400 fill-paw-400' : 'text-cream-300'} />
-                  ))}
-                </div>
-                <div className="flex-1 h-2 bg-cream-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-paw-400 rounded-full transition-all"
-                    style={{ width: `${pct + n * 10}%` }}
-                  />
-                </div>
-              </div>
-            )
-          })}
         </div>
 
         {/* Reviews list */}
         <div className="flex flex-col gap-4 mb-6">
+          {loading && <p className="text-center text-bark-400 text-sm">Cargando reseñas...</p>}
+          {!loading && reviews.length === 0 && (
+            <p className="text-center text-bark-400 text-sm">Este producto aún no tiene reseñas.</p>
+          )}
           {reviews.map(r => (
             <div key={r.id} className="card">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-bark-700 text-sm">{r.user}</span>
+                <span className="font-semibold text-bark-700 text-sm">{r.userName}</span>
                 <span className="text-xs text-bark-400">{r.date}</span>
               </div>
               <StarRating value={r.rating} readonly />
@@ -115,11 +92,19 @@ export default function Reviews() {
         </div>
 
         {/* Write review button / form */}
-        {!showForm ? (
-          <button
-            onClick={() => setShowForm(true)}
-            className="btn-primary w-full"
-          >
+        {!isLogged ? (
+          <p className="text-center text-xs text-bark-400">
+            <Link to="/login" className="text-paw-600 font-semibold hover:underline">Inicia sesión</Link>{' '}
+            para poder dejar una reseña de este producto.
+          </p>
+        ) : checkingEligibility ? (
+          <p className="text-center text-xs text-bark-400">Verificando si puedes reseñar este producto...</p>
+        ) : !canReview ? (
+          <p className="text-center text-xs text-bark-400 bg-cream-100 rounded-lg p-3">
+            Solo puedes reseñar productos que hayas comprado y que ya te hayan sido entregados.
+          </p>
+        ) : !showForm ? (
+          <button onClick={() => setShowForm(true)} className="btn-primary w-full">
             Escribir reseña
           </button>
         ) : (
@@ -139,8 +124,6 @@ export default function Reviews() {
           </div>
         )}
       </div>
-
-      <MobileNav />
     </div>
   )
 }

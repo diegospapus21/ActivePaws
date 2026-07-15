@@ -1,4 +1,5 @@
-const jwt = require('jsonwebtoken')
+const jwt  = require('jsonwebtoken')
+const User = require('../models/User')
 
 const JWT_SECRET = process.env.JWT_SECRET || 'activepaws_secret_key_2024'
 
@@ -6,9 +7,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'activepaws_secret_key_2024'
  * verifyToken
  * ────────────
  * Middleware que verifica el JWT enviado en el header Authorization.
- * Si el token es válido, adjunta el usuario decodificado en req.user.
- *
- * Uso: router.get('/ruta', verifyToken, handler)
  */
 function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization']
@@ -31,10 +29,7 @@ function verifyToken(req, res, next) {
 /**
  * verifyAdmin
  * ────────────
- * Middleware que verifica que el usuario autenticado sea administrador.
- * Siempre se usa DESPUÉS de verifyToken.
- *
- * Uso: router.delete('/ruta', verifyToken, verifyAdmin, handler)
+ * Requiere que el usuario autenticado sea administrador. Usar después de verifyToken.
  */
 function verifyAdmin(req, res, next) {
   if (req.user?.role !== 'admin') {
@@ -43,4 +38,23 @@ function verifyAdmin(req, res, next) {
   next()
 }
 
-module.exports = { verifyToken, verifyAdmin, JWT_SECRET }
+/**
+ * verifyConfirmed
+ * ────────────────
+ * Requiere que el usuario tenga el correo confirmado (consulta MongoDB para
+ * obtener el estado más reciente). Usar después de verifyToken.
+ */
+async function verifyConfirmed(req, res, next) {
+  try {
+    const user = await User.findById(req.user.id)
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado.' })
+    if (!user.emailConfirmed) {
+      return res.status(403).json({ message: 'Debes confirmar tu correo electrónico antes de continuar.' })
+    }
+    next()
+  } catch (err) {
+    res.status(500).json({ message: 'Error al validar el usuario.', error: err.message })
+  }
+}
+
+module.exports = { verifyToken, verifyAdmin, verifyConfirmed, JWT_SECRET }

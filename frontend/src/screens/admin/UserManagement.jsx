@@ -1,69 +1,21 @@
-import { useState } from 'react'
 import { Search, Plus, Pencil, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import AdminNavbar from '../../components/AdminNavbar'
 import MobileNav from '../../components/MobileNav'
 import StatusBadge from '../../components/StatusBadge'
-import { users as initialUsers } from '../../data/data'
-
-const AVATARS = [
-  'https://i.pravatar.cc/40?img=1', 'https://i.pravatar.cc/40?img=5',
-  'https://i.pravatar.cc/40?img=8', 'https://i.pravatar.cc/40?img=9',
-  'https://i.pravatar.cc/40?img=11','https://i.pravatar.cc/40?img=13',
-  'https://i.pravatar.cc/40?img=15','https://i.pravatar.cc/40?img=20',
-]
-
-const EMPTY_FORM = { name: '', email: '', role: 'Cliente', status: 'Activo' }
+import { useUsers } from '../../hooks/useUsers'
 
 export default function UserManagement() {
-  const [users, setUsers]     = useState(initialUsers)
-  const [search, setSearch]   = useState('')
-  const [modal, setModal]     = useState(null)
-  const [selected, setSelected] = useState(null)
-  const [form, setForm]       = useState(EMPTY_FORM)
-  const [page, setPage]       = useState(1)
-  const [sortBy, setSortBy]   = useState('default')
-  const PER_PAGE = 8
-
-  const filtered = users
-    .filter(u =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name)
-      if (sortBy === 'role') return a.role.localeCompare(b.role)
-      if (sortBy === 'status') return a.status.localeCompare(b.status)
-      return 0
-    })
-
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paginated  = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE)
-
-  const openAdd = () => { setForm(EMPTY_FORM); setSelected(null); setModal('add') }
-  const openEdit = (u) => { setForm({ name: u.name, email: u.email, role: u.role, status: u.status }); setSelected(u); setModal('edit') }
-  const openDelete = (u) => { setSelected(u); setModal('delete') }
-  const closeModal = () => { setModal(null); setSelected(null) }
-
-  const handleSave = () => {
-    if (!form.name.trim() || !form.email.trim()) return
-    if (modal === 'add') {
-      setUsers(prev => [{ id: Date.now(), ...form }, ...prev])
-    } else {
-      setUsers(prev => prev.map(u => u.id === selected.id ? { ...u, ...form } : u))
-    }
-    closeModal()
-  }
-
-  const handleDelete = () => {
-    setUsers(prev => prev.filter(u => u.id !== selected.id))
-    closeModal()
-  }
-
-  const f = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
-
-  // Stats
-  const activeCount = users.filter(u => u.status === 'Activo').length
-  const adminCount  = users.filter(u => u.role === 'Administrador').length
+  const {
+    loading, paginated, filtered, totalPages, users,
+    activeCount, adminCount,
+    search, setSearch,
+    modal, selected, form,
+    page, setPage,
+    sortBy, setSortBy,
+    openAdd, openEdit, openDelete, closeModal,
+    handleSave, handleDelete,
+    setField,
+  } = useUsers()
 
   return (
     <div className="min-h-screen bg-cream-100 pb-16 md:pb-0">
@@ -113,31 +65,39 @@ export default function UserManagement() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-cream-200">
-                <th className="p-3 w-8"><input type="checkbox" className="accent-paw-500" /></th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Nombre</th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Email</th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Rol</th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Estado</th>
+                <th className="p-3 text-left text-bark-500 font-semibold">Correo</th>
                 <th className="p-3 w-20 text-bark-500 font-semibold">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {paginated.length === 0 && (
+              {loading && (
+                <tr><td colSpan={6} className="text-center py-10 text-bark-400">Cargando usuarios...</td></tr>
+              )}
+              {!loading && paginated.length === 0 && (
                 <tr><td colSpan={6} className="text-center py-10 text-bark-400">No se encontraron usuarios.</td></tr>
               )}
-              {paginated.map((u, i) => (
+              {!loading && paginated.map((u) => (
                 <tr key={u.id} className="border-b border-cream-100 hover:bg-cream-50 transition-colors">
-                  <td className="p-3"><input type="checkbox" className="accent-paw-500" /></td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <img src={AVATARS[(u.id - 1) % AVATARS.length] || AVATARS[i % AVATARS.length]}
-                        alt={u.name} className="w-8 h-8 rounded-full object-cover bg-cream-200" />
+                      <div className="w-8 h-8 rounded-full bg-paw-100 flex items-center justify-center text-paw-700 font-bold text-xs">
+                        {u.name?.charAt(0).toUpperCase()}
+                      </div>
                       <span className="text-bark-700 font-medium">{u.name}</span>
                     </div>
                   </td>
                   <td className="p-3 text-bark-500 text-xs">{u.email}</td>
                   <td className="p-3"><StatusBadge status={u.role} /></td>
                   <td className="p-3"><StatusBadge status={u.status} /></td>
+                  <td className="p-3">
+                    {u.emailConfirmed
+                      ? <span className="text-xs text-green-600 font-semibold">Confirmado</span>
+                      : <span className="text-xs text-red-500 font-semibold">Sin confirmar</span>}
+                  </td>
                   <td className="p-3">
                     <div className="flex items-center gap-1">
                       <button onClick={() => openEdit(u)}
@@ -197,34 +157,38 @@ export default function UserManagement() {
             <div className="flex flex-col gap-3">
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Nombre completo *</label>
-                <input className="input-field" placeholder="Nombre Apellido" value={form.name} onChange={f('name')} />
+                <input className="input-field" placeholder="Nombre Apellido" value={form.name} onChange={setField('name')} />
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Correo electrónico *</label>
-                <input type="email" className="input-field" placeholder="correo@ejemplo.com" value={form.email} onChange={f('email')} />
+                <input type="email" className="input-field" placeholder="correo@ejemplo.com" value={form.email} onChange={setField('email')} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-bark-600 mb-1 block">Nombre de usuario</label>
+                <input className="input-field" placeholder="usuario123" value={form.username} onChange={setField('username')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-bark-600 mb-1 block">Rol</label>
-                  <select className="input-field" value={form.role} onChange={f('role')}>
+                  <select className="input-field" value={form.role} onChange={setField('role')}>
                     <option>Cliente</option>
                     <option>Administrador</option>
                   </select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-bark-600 mb-1 block">Estado</label>
-                  <select className="input-field" value={form.status} onChange={f('status')}>
+                  <select className="input-field" value={form.status} onChange={setField('status')}>
                     <option>Activo</option>
                     <option>Inactivo</option>
                   </select>
                 </div>
               </div>
-              {modal === 'add' && (
-                <div>
-                  <label className="text-xs font-semibold text-bark-600 mb-1 block">Contraseña temporal</label>
-                  <input type="password" className="input-field" placeholder="••••••••" />
-                </div>
-              )}
+              <div>
+                <label className="text-xs font-semibold text-bark-600 mb-1 block">
+                  {modal === 'add' ? 'Contraseña temporal' : 'Nueva contraseña (opcional)'}
+                </label>
+                <input type="password" className="input-field" placeholder="••••••••" value={form.password} onChange={setField('password')} />
+              </div>
             </div>
 
             <div className="flex gap-3 mt-5">

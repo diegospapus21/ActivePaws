@@ -2,17 +2,17 @@ import { Link } from 'react-router-dom'
 import { Truck, Award, ShieldCheck } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProductCard from '../components/ProductCard'
-import { bestSellers, products } from '../data/data'
-import { useAuth } from '../context/AuthContext'
+import { usePublicProducts } from '../hooks/usePublicProducts'
 
 export default function Home() {
-  const novedades = products.slice(2, 6)
-  const topSellers = bestSellers.slice(0, 5)
-  const { isAdmin } = useAuth()
+  const { products, loading } = usePublicProducts()
+
+  const novedades  = products.slice(2, 6)
+  const topSellers = [...products].sort((a, b) => b.sold - a.sold).slice(0, 5)
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar isAdmin={isAdmin} />
+      <Navbar />
 
       {/* Hero */}
       <section className="relative bg-cream-200 paw-bg overflow-hidden">
@@ -49,9 +49,13 @@ export default function Home() {
 
       {/* Novedades grid */}
       <section className="max-w-7xl mx-auto px-4 py-10 w-full">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {novedades.map(p => <ProductCard key={p.id} product={p} />)}
-        </div>
+        {loading ? (
+          <p className="text-center text-bark-400">Cargando productos...</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {novedades.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+        )}
       </section>
 
       {/* Banners */}

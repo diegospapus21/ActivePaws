@@ -1,37 +1,17 @@
 import { Link } from 'react-router-dom'
 import { ShoppingCart } from 'lucide-react'
 import { useState } from 'react'
+import { useCart } from '../context/CartContext'
 
 export default function ProductCard({ product, size = 'md' }) {
   const isSmall = size === 'sm'
   const [added, setAdded] = useState(false)
+  const { addItem } = useCart()
 
-  const addToCart = (e) => {
+  const handleAdd = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    
-    const savedCart = localStorage.getItem('cart')
-    const currentCart = savedCart ? JSON.parse(savedCart) : []
-    
-    const existingIndex = currentCart.findIndex(item => item.id === product.id)
-    
-    if (existingIndex !== -1) {
-      currentCart[existingIndex].quantity += 1
-    } else {
-      currentCart.push({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        currency: product.currency,
-        image: product.image,
-        description: product.description,
-        quantity: 1
-      })
-    }
-    
-    localStorage.setItem('cart', JSON.stringify(currentCart))
-    window.dispatchEvent(new Event('cartUpdated'))
-    
+    addItem(product, 1)
     setAdded(true)
     setTimeout(() => setAdded(false), 1000)
   }
@@ -51,11 +31,11 @@ export default function ProductCard({ product, size = 'md' }) {
       <div className={`p-3 flex flex-col gap-1 ${isSmall ? 'p-2' : ''}`}>
         <p className={`font-semibold text-bark-700 ${isSmall ? 'text-xs' : 'text-sm'} line-clamp-1`}>{product.name}</p>
         <p className={`text-paw-600 font-bold ${isSmall ? 'text-xs' : 'text-sm'}`}>
-          ${product.price.toLocaleString()} {product.currency}
+          ${Number(product.price).toLocaleString()} {product.currency}
         </p>
         {!isSmall && (
           <button
-            onClick={addToCart}
+            onClick={handleAdd}
             className={`mt-2 w-full flex items-center justify-center gap-2 text-white text-xs font-semibold py-2 rounded-lg transition-all duration-300 ${
               added ? 'bg-green-500' : 'bg-paw-500 hover:bg-paw-600'
             }`}

@@ -1,88 +1,19 @@
-import { useState } from 'react'
 import { Search, Plus, MoreVertical, ChevronLeft, ChevronRight, Pencil, Trash2, X } from 'lucide-react'
 import AdminNavbar from '../../components/AdminNavbar'
 import StatusBadge from '../../components/StatusBadge'
-import { products as initialProducts } from '../../data/data'
-
-const EMPTY_FORM = {
-  name: '', category: 'Ropa para Perros', price: '', currency: 'MXN',
-  stock: '', description: '', status: 'Activo', image: '',
-}
+import { useProducts } from '../../hooks/useProducts'
 
 export default function ProductManagement() {
-  const [products, setProducts]   = useState(initialProducts)
-  const [search, setSearch]       = useState('')
-  const [modal, setModal]         = useState(null)   // null | 'add' | 'edit' | 'delete'
-  const [selected, setSelected]   = useState(null)   // product being edited/deleted
-  const [form, setForm]           = useState(EMPTY_FORM)
-  const [page, setPage]           = useState(1)
-  const [menuOpen, setMenuOpen]   = useState(null)   // product id with open menu
-  const PER_PAGE = 8
-
-  const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.category.toLowerCase().includes(search.toLowerCase())
-  )
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
-
-  // ── Open modals ────────────────────────────────────────────────────────────
-  const openAdd = () => {
-    setForm(EMPTY_FORM)
-    setSelected(null)
-    setModal('add')
-  }
-
-  const openEdit = (p) => {
-    setForm({
-      name: p.name, category: p.category, price: p.price,
-      currency: p.currency, stock: p.stock, description: p.description,
-      status: p.status, image: p.image,
-    })
-    setSelected(p)
-    setModal('edit')
-    setMenuOpen(null)
-  }
-
-  const openDelete = (p) => {
-    setSelected(p)
-    setModal('delete')
-    setMenuOpen(null)
-  }
-
-  const closeModal = () => { setModal(null); setSelected(null) }
-
-  // ── CRUD operations ────────────────────────────────────────────────────────
-  const handleSave = () => {
-    if (!form.name.trim() || !form.price || !form.stock) return
-
-    if (modal === 'add') {
-      const newProduct = {
-        ...form,
-        id: Date.now(),
-        price: Number(form.price),
-        stock: Number(form.stock),
-        sold: 0,
-        tags: [],
-        image: form.image || 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=300&h=300&fit=crop',
-      }
-      setProducts(prev => [newProduct, ...prev])
-    } else if (modal === 'edit') {
-      setProducts(prev => prev.map(p =>
-        p.id === selected.id
-          ? { ...p, ...form, price: Number(form.price), stock: Number(form.stock) }
-          : p
-      ))
-    }
-    closeModal()
-  }
-
-  const handleDelete = () => {
-    setProducts(prev => prev.filter(p => p.id !== selected.id))
-    closeModal()
-  }
-
-  const f = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }))
+  const {
+    loading, paginated, filtered, totalPages,
+    search, setSearch,
+    modal, selected, form,
+    page, setPage,
+    menuOpen, setMenuOpen,
+    openAdd, openEdit, openDelete, closeModal,
+    handleSave, handleDelete,
+    setField,
+  } = useProducts()
 
   return (
     <div className="min-h-screen bg-cream-100 pb-16 md:pb-0" onClick={() => setMenuOpen(null)}>
@@ -104,17 +35,6 @@ export default function ProductManagement() {
             <input type="text" placeholder="Buscar producto..." className="input-field pl-9 py-2"
               value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <select className="input-field py-2 w-auto text-sm">
-              <option>Ordenar por</option>
-              <option>Nombre A–Z</option>
-              <option>Precio mayor</option>
-            </select>
-            <select className="input-field py-2 w-auto text-sm">
-              <option>Más recientes</option>
-              <option>Más antiguos</option>
-            </select>
-          </div>
         </div>
 
         {/* Table */}
@@ -122,7 +42,6 @@ export default function ProductManagement() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-cream-200">
-                <th className="p-3 w-8"><input type="checkbox" className="accent-paw-500" /></th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Foto</th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Producto</th>
                 <th className="p-3 text-left text-bark-500 font-semibold">Categoría</th>
@@ -133,12 +52,14 @@ export default function ProductManagement() {
               </tr>
             </thead>
             <tbody>
-              {paginated.length === 0 && (
-                <tr><td colSpan={8} className="text-center py-10 text-bark-400">No se encontraron productos.</td></tr>
+              {loading && (
+                <tr><td colSpan={7} className="text-center py-10 text-bark-400">Cargando productos...</td></tr>
               )}
-              {paginated.map((p) => (
+              {!loading && paginated.length === 0 && (
+                <tr><td colSpan={7} className="text-center py-10 text-bark-400">No se encontraron productos.</td></tr>
+              )}
+              {!loading && paginated.map((p) => (
                 <tr key={p.id} className="border-b border-cream-100 hover:bg-cream-50 transition-colors">
-                  <td className="p-3"><input type="checkbox" className="accent-paw-500" /></td>
                   <td className="p-3">
                     <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover bg-cream-100" />
                   </td>
@@ -216,11 +137,11 @@ export default function ProductManagement() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-2">
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Nombre del producto *</label>
-                <input className="input-field" placeholder="Ej. Suéter Azul" value={form.name} onChange={f('name')} />
+                <input className="input-field" placeholder="Ej. Suéter Azul" value={form.name} onChange={setField('name')} />
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Categoría *</label>
-                <select className="input-field" value={form.category} onChange={f('category')}>
+                <select className="input-field" value={form.category} onChange={setField('category')}>
                   <option>Ropa para Perros</option>
                   <option>Ropa para Gatos</option>
                   <option>Accesorios</option>
@@ -228,34 +149,34 @@ export default function ProductManagement() {
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Estado</label>
-                <select className="input-field" value={form.status} onChange={f('status')}>
+                <select className="input-field" value={form.status} onChange={setField('status')}>
                   <option>Activo</option>
                   <option>Inactivo</option>
                 </select>
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Precio *</label>
-                <input type="number" className="input-field" placeholder="0" value={form.price} onChange={f('price')} />
+                <input type="number" className="input-field" placeholder="0" value={form.price} onChange={setField('price')} />
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Moneda</label>
-                <select className="input-field" value={form.currency} onChange={f('currency')}>
+                <select className="input-field" value={form.currency} onChange={setField('currency')}>
                   <option>MXN</option>
                   <option>USD</option>
                 </select>
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Stock inicial *</label>
-                <input type="number" className="input-field" placeholder="0" value={form.stock} onChange={f('stock')} />
+                <input type="number" className="input-field" placeholder="0" value={form.stock} onChange={setField('stock')} />
               </div>
               <div>
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">URL de imagen</label>
-                <input className="input-field" placeholder="https://..." value={form.image} onChange={f('image')} />
+                <input className="input-field" placeholder="https://..." value={form.image} onChange={setField('image')} />
               </div>
               <div className="sm:col-span-2">
                 <label className="text-xs font-semibold text-bark-600 mb-1 block">Descripción</label>
                 <textarea className="input-field resize-none h-20" placeholder="Descripción del producto..."
-                  value={form.description} onChange={f('description')} />
+                  value={form.description} onChange={setField('description')} />
               </div>
             </div>
 

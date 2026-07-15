@@ -11,7 +11,7 @@ const adminLinks = [
 ]
 
 export default function AdminNavbar() {
-  const { currentUser, logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -61,7 +61,7 @@ export default function AdminNavbar() {
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-sm font-semibold text-amber-700">
-              ¡Hola, {currentUser?.name || 'Admin'}!
+              ¡Hola, {user?.name || 'Admin'}!
             </span>
             <span className="text-xs text-amber-500 font-medium">Administrador</span>
           </div>
@@ -69,7 +69,7 @@ export default function AdminNavbar() {
           {/* Foto de perfil del admin */}
           <div className="w-9 h-9 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center overflow-hidden hover:scale-105 transition-all duration-200">
             <img 
-              src={currentUser?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"} 
+              src={user?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"} 
               alt="admin" 
               className="w-full h-full object-cover"
             />

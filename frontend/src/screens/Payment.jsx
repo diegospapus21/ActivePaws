@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 
 export default function Payment() {
   const navigate = useNavigate()
+  const { cart, total, checkout } = useCart()
+  const { isLogged, isConfirmed } = useAuth()
+  const { showToast } = useToast()
   const [method, setMethod] = useState('visa')
-  const [cart, setCart] = useState([])
-  const [total, setTotal] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     cardNumber: '',
     expMonth: '01',
@@ -14,38 +19,37 @@ export default function Payment() {
     cvv: '',
   })
 
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart')
-    if (savedCart) {
-      const cartData = JSON.parse(savedCart)
-      setCart(cartData)
-      const totalAmount = cartData.reduce((sum, item) => sum + item.price * item.quantity, 0)
-      setTotal(totalAmount)
-    }
-  }, [])
-
-  const handlePay = () => {
-    if (cart.length === 0) {
-      alert('No hay productos en el carrito')
+  const handlePay = async () => {
+    if (!isLogged || !isConfirmed) {
+      showToast('Debes iniciar sesión y confirmar tu correo para comprar.', 'error')
       navigate('/carrito')
       return
     }
-    
-    if (!form.cardNumber || form.cardNumber.length < 10) {
-      alert('Por favor ingresa un número de tarjeta válido')
+    if (cart.length === 0) {
+      showToast('No hay productos en el carrito.', 'error')
+      navigate('/carrito')
       return
     }
-    
+    if (!form.cardNumber || form.cardNumber.replace(/\s/g, '').length < 10) {
+      showToast('Ingresa un número de tarjeta válido.', 'error')
+      return
+    }
     if (!form.cvv || form.cvv.length < 3) {
-      alert('Por favor ingresa el código de seguridad')
+      showToast('Ingresa el código de seguridad (CVV).', 'error')
       return
     }
-    
-    alert(`✅ ¡Pago realizado con éxito!\n\nTotal: $${total.toLocaleString()} MXN\n\nGracias por tu compra!`)
-    
-    localStorage.removeItem('cart')
-    window.dispatchEvent(new Event('cartUpdated'))
-    navigate('/')
+
+    setSubmitting(true)
+    const result = await checkout({ method })
+    setSubmitting(false)
+
+    if (!result.ok) {
+      showToast(result.message, 'error')
+      return
+    }
+
+    showToast(`✅ ¡Pago realizado! Pedido #${result.order.orderNumber || result.order.id}`, 'success')
+    navigate('/mis-pedidos')
   }
 
   if (cart.length === 0) {
@@ -78,13 +82,7 @@ export default function Payment() {
               </h2>
               <div className="flex flex-col gap-4 mt-4">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="payment"
-                    checked
-                    readOnly
-                    className="accent-paw-500"
-                  />
+                  <input type="radio" name="payment" checked readOnly className="accent-paw-500" />
                   <span className="text-sm font-medium text-bark-700">Pago con tarjeta</span>
                 </label>
 
@@ -189,8 +187,8 @@ export default function Payment() {
                   </div>
                 </div>
 
-                <button onClick={handlePay} className="btn-primary w-full py-3 text-base mt-2">
-                  Pagar ${total.toLocaleString()} MXN
+                <button onClick={handlePay} disabled={submitting} className="btn-primary w-full py-3 text-base mt-2 disabled:opacity-60">
+                  {submitting ? 'Procesando...' : `Pagar $${total.toLocaleString()} MXN`}
                 </button>
               </div>
             </div>

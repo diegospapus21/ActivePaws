@@ -2,15 +2,18 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
+import Stars from './Stars'
 import { colors, radii, shadow } from '../theme/theme'
 import { formatPrice } from '../utils/format'
 import { useCart } from '../context/CartContext'
 
-// Tarjeta de producto para la cuadrícula del catálogo.
+// Tarjeta de producto para la cuadrícula del catálogo (muestra valoración y stock).
 export default function ProductCard({ product }) {
   const router = useRouter()
-  const { addItem } = useCart()
+  const { addItem, quantityOf } = useCart()
+  const inCart = quantityOf(product.id)
   const outOfStock = product.stock <= 0
+  const maxReached = !outOfStock && inCart >= product.stock
 
   return (
     <Pressable
@@ -29,15 +32,19 @@ export default function ProductCard({ product }) {
       <View style={styles.body}>
         <Text style={styles.category}>{product.category}</Text>
         <Text style={styles.name} numberOfLines={1}>{product.name}</Text>
+        <View style={styles.ratingRow}>
+          <Stars value={product.avgRating || 0} size={12} />
+          <Text style={styles.ratingText}>({product.reviewCount || 0})</Text>
+        </View>
         <View style={styles.row}>
           <Text style={styles.price}>{formatPrice(product.price, product.currency)}</Text>
           <Pressable
-            disabled={outOfStock}
+            disabled={outOfStock || maxReached}
             onPress={() => addItem(product, 1)}
-            style={[styles.addBtn, outOfStock && { opacity: 0.4 }]}
+            style={[styles.addBtn, (outOfStock || maxReached) && { opacity: 0.4 }]}
             hitSlop={6}
           >
-            <Ionicons name="add" size={20} color={colors.white} />
+            <Ionicons name={maxReached ? 'checkmark' : 'add'} size={20} color={colors.white} />
           </Pressable>
         </View>
       </View>
@@ -47,13 +54,8 @@ export default function ProductCard({ product }) {
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
-    backgroundColor: colors.white,
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.cream[200],
-    overflow: 'hidden',
-    ...shadow.card,
+    flex: 1, backgroundColor: colors.white, borderRadius: radii.xl, borderWidth: 1,
+    borderColor: colors.cream[200], overflow: 'hidden', ...shadow.card,
   },
   imgWrap: { width: '100%', aspectRatio: 1, backgroundColor: colors.cream[100] },
   img: { width: '100%', height: '100%' },
@@ -65,6 +67,8 @@ const styles = StyleSheet.create({
   body: { padding: 12 },
   category: { fontSize: 11, color: colors.paw[600], fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.3 },
   name: { fontSize: 15, fontWeight: '800', color: colors.bark[700], marginTop: 2 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  ratingText: { fontSize: 11, color: colors.bark[400], fontWeight: '600' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
   price: { fontSize: 15, fontWeight: '800', color: colors.bark[800] },
   addBtn: {

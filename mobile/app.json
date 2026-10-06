@@ -58,7 +58,7 @@
       "typedRoutes": false
     },
     "extra": {
-      "apiUrl": "http://10.10.1.120:4000/api"
+      "apiUrl": "https://activepaws-api.onrender.com/api"
     }
   }
 }

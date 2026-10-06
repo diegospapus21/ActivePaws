@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
 
   // ─── Registrar cuenta (envía código de verificación al correo) ─────────────
   const register = useCallback(async (payload) => {
-    // payload: { name, email, username, password }
+    // payload: { name, email, username, password, age }
     return api.post('/auth/register', payload, { auth: false })
   }, [])
 
@@ -55,6 +55,19 @@ export function AuthProvider({ children }) {
 
   const forgotPassword = useCallback(async (email) => {
     return api.post('/auth/forgot-password', { email }, { auth: false })
+  }, [])
+
+  // ─── Restablecer contraseña con el código de 6 dígitos del correo ───────────
+  const resetPassword = useCallback(async (email, code, password) => {
+    return api.post('/auth/reset-password', { email, code, password }, { auth: false })
+  }, [])
+
+  // ─── Editar el perfil del usuario logueado ──────────────────────────────────
+  // Actualiza el estado global para que Home, Perfil, etc. muestren los datos nuevos.
+  const updateProfile = useCallback(async (changes) => {
+    const res = await api.put('/auth/me', changes)
+    setUser(res.user)
+    return res
   }, [])
 
   // ─── Refrescar datos del usuario (ej. tras confirmar correo) ────────────────
@@ -84,6 +97,8 @@ export function AuthProvider({ children }) {
     verifyCode,
     resendCode,
     forgotPassword,
+    resetPassword,
+    updateProfile,
     refreshUser,
     logout,
   }

@@ -9,11 +9,13 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash-logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#fdf9f3"
+      "backgroundColor": "#efe4d2"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.activepaws.mobile"
@@ -24,7 +26,8 @@
         "backgroundColor": "#fdf9f3"
       },
       "package": "com.activepaws.mobile",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
@@ -37,9 +40,17 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#fdf9f3",
-          "image": "./assets/splash.png",
-          "imageWidth": 200
+          "backgroundColor": "#efe4d2",
+          "image": "./assets/splash-logo.png",
+          "imageWidth": 260
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
         }
       ]
     ],
